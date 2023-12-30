@@ -3,6 +3,7 @@ const app = express();
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
+const session = require("express-session");
 
 //mongoose connect
 mongoose
@@ -20,6 +21,14 @@ app.set("views", "views");
 app.use(
   express.urlencoded({
     extended: true,
+  })
+);
+
+app.use(
+  session({
+    secret: "secretnote",
+    resave: false,
+    saveUninitialized: false,
   })
 );
 
@@ -52,6 +61,7 @@ app.post("/login", async (req, res) => {
   if (user) {
     const isMatch = bcrypt.compare(password, user.password);
     if (isMatch) {
+      req.session.user_id = user.id;
       res.redirect("/admin");
     } else {
       res.redirect("/login");
@@ -62,6 +72,9 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/admin", (req, res) => {
+  if (!req.session.user_id) {
+    res.redirect("/login");
+  }
   res.send("Halaman admin hanya bisa di akses jika kamu login");
 });
 
